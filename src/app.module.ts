@@ -1,14 +1,21 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
-    MongooseModule.forRoot(
-      'mongodb+srv://alexander:Tsubasa12345-@clustermel.5wjkb5s.mongodb.net/',
-    ),
+    ConfigModule.forRoot(),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (config: ConfigService) => ({
+        uri: config.get<string>('DATABASE'),
+      }),
+      inject: [ConfigService],
+    }),
     UsersModule,
   ],
   controllers: [AppController],
