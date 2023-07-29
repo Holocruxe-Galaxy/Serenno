@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { HttpModule } from '@nestjs/axios';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { AppController } from './app.controller';
@@ -17,6 +18,7 @@ import { UsersModule } from './users/users.module';
       inject: [ConfigService],
     }),
     UsersModule,
+    HttpModule,
   ],
   controllers: [AppController],
   providers: [AppService],
