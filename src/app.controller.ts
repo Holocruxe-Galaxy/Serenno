@@ -15,8 +15,9 @@ export class AppController {
   }
 
   @Post('/notification')
-  notification() {
-    return;
+  notification(@Body() data) {
+    console.log(data);
+    return 'Ok';
   }
 
   @Post('/order')
