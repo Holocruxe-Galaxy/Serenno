@@ -14,8 +14,16 @@ export class AppController {
     return this.appService.getHello();
   }
 
+  @Get('/notification')
+  notificationGet(@Body() data) {
+    console.log('entré 2222');
+    console.log(data);
+    return 'Ok';
+  }
+
   @Post('/notification')
   notification(@Body() data) {
+    console.log('entré');
     console.log(data);
     return 'Ok';
   }
@@ -23,17 +31,6 @@ export class AppController {
   @Post('/order')
   async createOrder(@Body() data) {
     const createdOrder = this.appService.createOrder(data);
-
-    this.httpService
-      .get('https://api.mercadolibre.com/items/MLA1380266233', {
-        headers: {
-          Authorization: `Bearer APP_USR-8119640945694263-070700-dbeea63075ad777f5ff43ae55c233f6c-1156166910`,
-        },
-      })
-      .subscribe((value) => {
-        console.log(value);
-      });
-
     return createdOrder;
   }
 }
