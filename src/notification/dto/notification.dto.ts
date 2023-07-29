@@ -1,6 +1,7 @@
+import { Type } from 'class-transformer';
 import { IsDate, IsNumber, IsString } from 'class-validator';
 
-export class CreateNotificationDto {
+export class NotificationDto {
   @IsString()
   resource: string;
 
@@ -13,12 +14,14 @@ export class CreateNotificationDto {
   @IsNumber()
   application_id: number;
 
-  @IsString()
+  @IsNumber()
   attempts: number;
 
+  @Type(() => Date)
   @IsDate()
   sent: Date;
 
+  @Type(() => Date)
   @IsDate()
   received: Date;
 }

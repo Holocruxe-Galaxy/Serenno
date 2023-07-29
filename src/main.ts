@@ -12,8 +12,8 @@ export const validationOptions: ValidationPipeOptions = {
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(port, '0.0.0.0');
-
   app.useGlobalPipes(new ValidationPipe(validationOptions));
+
+  await app.listen(port, '0.0.0.0');
 }
 bootstrap();

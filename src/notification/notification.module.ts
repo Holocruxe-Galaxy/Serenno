@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { NotificationService } from './notification.service';
 import { NotificationController } from './notification.controller';
+import { ShipmentsModule } from 'src/shipments/shipments.module';
 
 @Module({
+  imports: [ShipmentsModule],
   controllers: [NotificationController],
-  providers: [NotificationService],
 })
 export class NotificationModule {}

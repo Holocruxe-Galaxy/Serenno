@@ -1,26 +1,13 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
-import { NotificationService } from './notification.service';
-import { CreateNotificationDto } from './dto/create-notification.dto';
+import { Controller, Post, Body, UseInterceptors } from '@nestjs/common';
+import { NotificationDto } from './dto/notification.dto';
+import { NotificationInterceptor } from './notification.interceptor';
 
+@UseInterceptors(NotificationInterceptor)
 @Controller('notification')
 export class NotificationController {
-  constructor(private readonly notificationService: NotificationService) {}
-
-  // @Post()
-  // create(@Body() createNotificationDto: CreateNotificationDto) {
-  //   return this.notificationService.create(createNotificationDto);
-  // }
-
   @Post()
-  notification(@Body() createNotificationDto: CreateNotificationDto) {
-    console.log('entré');
-    console.log(createNotificationDto);
-    console.log('me voy');
+  // eslint-disable-next-line
+  notification(@Body() notificationDto: NotificationDto) {
     return 'Ok';
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.notificationService.findOne(+id);
   }
 }
