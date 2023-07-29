@@ -21,12 +21,12 @@ export class AppController {
     return 'Ok';
   }
 
-  @Post('/notification')
-  notification(@Body() data) {
-    console.log('entré');
-    console.log(data);
-    return 'Ok';
-  }
+  // @Post('/notification')
+  // notification(@Body() data) {
+  //   console.log('entré');
+  //   console.log(data);
+  //   return 'Ok';
+  // }
 
   @Post('/order')
   async createOrder(@Body() data) {
