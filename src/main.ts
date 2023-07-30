@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, ValidationPipeOptions } from '@nestjs/common';
 import { AppModule } from './app.module';
 
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 export const validationOptions: ValidationPipeOptions = {
   whitelist: true,
