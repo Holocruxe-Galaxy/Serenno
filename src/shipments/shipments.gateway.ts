@@ -6,6 +6,8 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { NotificationDto } from 'src/notification/dto/notification.dto';
+import { ShipmentsService } from './shipments.service';
+import { Token } from 'src/admin/schemas/token.schema';
 
 export interface ConnectedClients {
   [id: string]: Socket;
@@ -15,6 +17,7 @@ export interface ConnectedClients {
 export class ShipmentsGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
+  constructor(private readonly shipmentsService: ShipmentsService) {}
   @WebSocketServer() server: Server;
   private readonly connectedClients: ConnectedClients = {};
 
@@ -27,9 +30,17 @@ export class ShipmentsGateway
     return;
   }
 
-  eventEmitter(notification: NotificationDto): string {
-    console.log('estoy en el gateawaito');
-    this.server.emit('broadcast', notification);
+  async eventEmitter(
+    notification: NotificationDto,
+    headers: Token,
+  ): Promise<string> {
+    const { shipment, item } = await this.shipmentsService.create(
+      notification,
+      headers,
+    );
+
+    this.server.emit('broadcast', shipment);
+    this.server.emit('broadcast', item);
     return 'Hello world!';
   }
 }

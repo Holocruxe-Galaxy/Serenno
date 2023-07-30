@@ -1,11 +1,37 @@
 import { Injectable } from '@nestjs/common';
-import { CreateShipmentDto } from './dto/create-shipment.dto';
-import { UpdateShipmentDto } from './dto/update-shipment.dto';
+import { ConfigService } from '@nestjs/config';
+import { HttpService } from '@nestjs/axios';
+import { NotificationDto } from 'src/notification/dto/notification.dto';
+import { Shipment } from './interfaces/shipments.interface';
+import { Token } from 'src/admin/schemas/token.schema';
 
 @Injectable()
 export class ShipmentsService {
-  create(createShipmentDto: CreateShipmentDto) {
-    return 'This action adds a new shipment';
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly httpService: HttpService,
+  ) {}
+
+  async create(notification: NotificationDto, token: Token) {
+    const headers = {
+      headers: { Authorization: `Bearer ${token.access_token}` },
+    };
+    try {
+      const { data: shipment }: { data: Shipment } =
+        await this.httpService.axiosRef.get(
+          `${this.configService.get('MERCADO')}${notification.resource}`,
+          headers,
+        );
+
+      const { data: item } = await this.httpService.axiosRef.get(
+        `${this.configService.get('MERCADO')}${notification.resource}/items`,
+        headers,
+      );
+
+      return { shipment, item };
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   findAll() {
@@ -14,10 +40,6 @@ export class ShipmentsService {
 
   findOne(id: number) {
     return `This action returns a #${id} shipment`;
-  }
-
-  update(id: number, updateShipmentDto: UpdateShipmentDto) {
-    return `This action updates a #${id} shipment`;
   }
 
   remove(id: number) {
