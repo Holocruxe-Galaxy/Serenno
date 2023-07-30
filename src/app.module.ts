@@ -3,9 +3,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { MongooseModule } from '@nestjs/mongoose';
 
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { UsersModule } from './users/users.module';
+import { NotificationModule } from './notification/notification.module';
+import { ShipmentsModule } from './shipments/shipments.module';
+import { UserModule } from './user/user.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -13,14 +14,33 @@ import { UsersModule } from './users/users.module';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
-        uri: config.get<string>('DATABASE'),
+        uri: config.get<string>('MAIN'),
       }),
       inject: [ConfigService],
     }),
-    UsersModule,
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (config: ConfigService) => ({
+        uri: config.get<string>('ADMIN'),
+      }),
+      inject: [ConfigService],
+      connectionName: 'ADMIN',
+    }),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (config: ConfigService) => ({
+        uri: config.get<string>('TOKEN'),
+      }),
+      inject: [ConfigService],
+      connectionName: 'TOKEN',
+    }),
     HttpModule,
+    NotificationModule,
+    ShipmentsModule,
+    UserModule,
+    AdminModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
