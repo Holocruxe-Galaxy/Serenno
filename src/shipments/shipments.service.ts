@@ -23,12 +23,12 @@ export class ShipmentsService {
           headers,
         );
 
-      const { data: item } = await this.httpService.axiosRef.get(
-        `${this.configService.get('MERCADO')}${notification.resource}/items`,
-        headers,
-      );
+      // const { data: item } = await this.httpService.axiosRef.get(
+      //   `${this.configService.get('MERCADO')}${notification.resource}/items`,
+      //   headers,
+      // );
 
-      return { shipment, item };
+      return { shipment };
     } catch (error) {
       console.log(error);
     }

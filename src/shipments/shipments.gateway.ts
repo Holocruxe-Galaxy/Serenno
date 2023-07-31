@@ -34,13 +34,12 @@ export class ShipmentsGateway
     notification: NotificationDto,
     headers: Token,
   ): Promise<string> {
-    const { shipment, item } = await this.shipmentsService.create(
+    const { shipment } = await this.shipmentsService.create(
       notification,
       headers,
     );
 
     this.server.emit('broadcast', shipment);
-    this.server.emit('broadcast', item);
     return 'Hello world!';
   }
 }
