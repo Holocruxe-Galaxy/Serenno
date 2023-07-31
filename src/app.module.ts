@@ -14,14 +14,14 @@ import { AdminModule } from './admin/admin.module';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
-        uri: config.get<string>('MAIN'),
+        uri: config.get<string>('MAINDATABASE'),
       }),
       inject: [ConfigService],
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
-        uri: config.get<string>('ADMIN'),
+        uri: config.get<string>('ADMINDATABASE'),
       }),
       inject: [ConfigService],
       connectionName: 'ADMIN',
@@ -29,7 +29,7 @@ import { AdminModule } from './admin/admin.module';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
-        uri: config.get<string>('TOKEN'),
+        uri: config.get<string>('TOKENDATABASE'),
       }),
       inject: [ConfigService],
       connectionName: 'TOKEN',
