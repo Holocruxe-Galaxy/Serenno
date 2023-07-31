@@ -31,8 +31,7 @@ export class NotificationInterceptor implements NestInterceptor {
             .getRequest().body;
 
           console.log(`After... ${Date.now() - now}ms`);
-          console.table(notification.resource);
-          console.table(notification.attempts);
+          console.table(notification);
           console.table(context.switchToHttp().getResponse().state);
           await this.notificationService.create(notification);
           const headers = await this.adminService.findAll();
