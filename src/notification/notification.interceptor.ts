@@ -22,6 +22,7 @@ export class NotificationInterceptor implements NestInterceptor {
     private readonly shipmentsGateway: ShipmentsGateway,
   ) {}
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const now = Date.now();
     return next.handle().pipe(
       tap({
         complete: async () => {
@@ -29,6 +30,10 @@ export class NotificationInterceptor implements NestInterceptor {
             .switchToHttp()
             .getRequest().body;
 
+          console.log(`After... ${Date.now() - now}ms`);
+          console.log(notification.resource);
+          console.log(notification.attempts);
+          console.log(context.switchToHttp().getResponse());
           await this.notificationService.create(notification);
           const headers = await this.adminService.findAll();
           await this.shipmentsGateway.eventEmitter(notification, headers);
