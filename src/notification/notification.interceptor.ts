@@ -29,13 +29,18 @@ export class NotificationInterceptor implements NestInterceptor {
           const notification: NotificationDto = context
             .switchToHttp()
             .getRequest().body;
-
-          console.log(`After... ${Date.now() - now}ms`);
-          console.table(notification);
-          console.table(context.switchToHttp().getResponse().state);
           await this.notificationService.create(notification);
+
+          const isShipment = notification.resource.split('/')[1];
+
+          if (isShipment !== 'shipments') return;
           const headers = await this.adminService.findAll();
-          await this.shipmentsGateway.eventEmitter(notification, headers);
+          const data = await this.shipmentsGateway.eventEmitter(
+            notification,
+            headers,
+          );
+
+          console.log(data);
         },
       }),
     );
