@@ -14,7 +14,10 @@ export class ShipmentsService {
 
   async create(notification: NotificationDto, token: Token) {
     const headers = {
-      headers: { Authorization: `Bearer ${token.access_token}` },
+      headers: {
+        Authorization: `Bearer ${token.access_token}`,
+        'x-format-new': true,
+      },
     };
     try {
       const { data: shipment }: { data: Shipment } =

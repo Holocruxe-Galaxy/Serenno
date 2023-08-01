@@ -22,7 +22,6 @@ export class NotificationInterceptor implements NestInterceptor {
     private readonly shipmentsGateway: ShipmentsGateway,
   ) {}
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const now = Date.now();
     return next.handle().pipe(
       tap({
         complete: async () => {
