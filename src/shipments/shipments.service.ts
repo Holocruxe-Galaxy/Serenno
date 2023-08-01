@@ -16,7 +16,7 @@ export class ShipmentsService {
     const headers = {
       headers: {
         Authorization: `Bearer ${token.access_token}`,
-        'x-format-new': true,
+        // 'x-format-new': true,
       },
     };
     try {
