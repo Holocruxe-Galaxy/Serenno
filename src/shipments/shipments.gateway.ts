@@ -8,7 +8,7 @@ import { Server, Socket } from 'socket.io';
 import { NotificationDto } from 'src/notification/dto/notification.dto';
 import { ShipmentsService } from './shipments.service';
 import { Token } from 'src/admin/schemas/token.schema';
-import { Shipment } from './interfaces/shipments.interface';
+import { CoreData } from './interfaces';
 
 export interface ConnectedClients {
   [id: string]: Socket;
@@ -34,13 +34,13 @@ export class ShipmentsGateway
   async eventEmitter(
     notification: NotificationDto,
     headers: Token,
-  ): Promise<Shipment> {
-    const { shipment } = await this.shipmentsService.create(
+  ): Promise<CoreData> {
+    const { coreData } = await this.shipmentsService.create(
       notification,
       headers,
     );
 
-    this.server.emit('broadcast', shipment);
-    return shipment;
+    this.server.emit('broadcast', coreData);
+    return coreData;
   }
 }

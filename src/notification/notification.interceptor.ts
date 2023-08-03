@@ -30,16 +30,11 @@ export class NotificationInterceptor implements NestInterceptor {
             .getRequest().body;
           await this.notificationService.create(notification);
 
-          // const isShipment = notification.resource.split('/')[1];
+          const isShipment = notification.resource.split('/')[1];
 
-          // if (isShipment !== 'shipments') return;
+          if (isShipment !== 'shipments') return;
           const headers = await this.adminService.findAll();
-          const data = await this.shipmentsGateway.eventEmitter(
-            notification,
-            headers,
-          );
-
-          console.log(data);
+          await this.shipmentsGateway.eventEmitter(notification, headers);
         },
       }),
     );

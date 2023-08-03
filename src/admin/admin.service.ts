@@ -21,9 +21,7 @@ export class AdminService {
   }
 
   async updateToken() {
-    const admin = await this.adminModel.findOne();
-
-    console.log(admin);
+    await this.adminModel.findOne();
   }
 
   async findAll(): Promise<Token> {
