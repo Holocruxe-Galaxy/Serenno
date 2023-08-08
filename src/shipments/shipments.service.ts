@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { InjectModel } from '@nestjs/mongoose';
@@ -41,6 +41,7 @@ export class ShipmentsService {
       const coreData: CoreData = {
         id: shipment.id,
         seller: seller[0].contact,
+        buyer: shipment.destination.receiver_name,
         address: destinationData.address_line,
         zipCode: destinationData.zip_code,
         deliveryPreferences: destinationData.delivery_preference,
@@ -50,7 +51,7 @@ export class ShipmentsService {
 
       return { coreData };
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, error.status);
     }
   }
 
@@ -58,23 +59,15 @@ export class ShipmentsService {
     headers: AxiosRequestConfig,
     params: string,
   ): Promise<T> {
-    const { data } = await this.httpService.axiosRef.get<T>(
-      `${this.configService.get('MERCADO')}${params}`,
-      headers,
-    );
-    return data;
+    return (
+      await this.httpService.axiosRef.get<T>(
+        `${this.configService.get('MERCADO')}${params}`,
+        headers,
+      )
+    ).data;
   }
 
   async findAll() {
-    const data: CoreData[] = await this.shippingModel.find().select('coreData');
-    return data;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} shipment`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} shipment`;
+    return await this.shippingModel.find().select('coreData');
   }
 }

@@ -4,4 +4,5 @@ export interface CoreData {
   zipCode: string;
   deliveryPreferences: string;
   seller: string;
+  buyer: string;
 }

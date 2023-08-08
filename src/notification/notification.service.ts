@@ -13,8 +13,16 @@ export class NotificationService {
 
   async create(notification: NotificationDto) {
     try {
-      await this.notificationModel.create(notification);
-      return;
+      const exists = await this.notificationModel.findOneAndUpdate(
+        {
+          resource: notification.resource,
+        },
+        notification,
+      );
+
+      if (!exists) {
+        return await this.notificationModel.create(notification);
+      }
     } catch (error) {
       if (error.code === 11000) return;
     }
