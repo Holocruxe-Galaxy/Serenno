@@ -14,7 +14,7 @@ export interface ConnectedClients {
   [id: string]: Socket;
 }
 
-@WebSocketGateway()
+@WebSocketGateway({ cors: true })
 export class ShipmentsGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
