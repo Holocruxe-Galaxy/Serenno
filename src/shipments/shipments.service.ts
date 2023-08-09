@@ -19,6 +19,8 @@ export class ShipmentsService {
   ) {}
 
   async create(notification: NotificationDto, token: Token) {
+    const exists = await this.checkIfExists(notification.resource);
+
     const headers: AxiosRequestConfig = {
       headers: {
         Authorization: `Bearer ${token.access_token}`,
@@ -47,6 +49,15 @@ export class ShipmentsService {
         deliveryPreferences: destinationData.delivery_preference,
       };
 
+      if (exists) {
+        await this.shippingModel.findByIdAndUpdate(exists.id, {
+          shipment,
+          seller,
+          coreData,
+        });
+
+        return { coreData };
+      }
       await this.shippingModel.create({ shipment, seller, coreData });
 
       return { coreData };
@@ -65,6 +76,12 @@ export class ShipmentsService {
         headers,
       )
     ).data;
+  }
+
+  private async checkIfExists(resource: string) {
+    const id = Number(resource.split('/')[2]);
+
+    return await this.shippingModel.findOne({ 'coreData.id': id });
   }
 
   async findAll() {
