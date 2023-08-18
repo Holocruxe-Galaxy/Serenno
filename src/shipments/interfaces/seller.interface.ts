@@ -1,119 +1,220 @@
 export interface Seller {
   id: number;
-  user_id: number;
-  location_id: any;
-  contact: string;
-  phone: string;
-  address_line: string;
-  floor: any;
-  apartment: any;
-  street_number: string;
-  street_name: string;
+  nickname: string;
+  registration_date: string;
+  first_name: string;
+  last_name: string;
+  gender: string;
+  country_id: string;
+  email: string;
+  identification: Identification;
+  address: Address;
+  phone: Phone;
+  alternative_phone: AlternativePhone;
+  user_type: string;
+  tags: string[];
+  logo: any;
+  points: number;
+  site_id: string;
+  permalink: string;
+  seller_experience: string;
+  bill_data: BillData;
+  seller_reputation: SellerReputation;
+  buyer_reputation: BuyerReputation;
+  status: Status;
+  secure_email: string;
+  company: Company;
+  credit: Credit;
+  context: Context;
+  registration_identifiers: any[];
+}
+
+export interface Identification {
+  number: string;
+  type: string;
+}
+
+export interface Address {
+  address: string;
+  city: string;
+  state: string;
   zip_code: string;
-  city: City;
-  state: State;
-  country: Country;
-  neighborhood: Neighborhood;
-  municipality: Municipality;
-  search_location: SearchLocation;
-  types: string[];
-  comment: any;
-  between: any;
-  references: any;
-  aditional_info: any;
-  geolocation_type: string;
-  geolocation_last_updated: string;
-  geolocation_source: string;
-  latitude: number;
-  longitude: number;
-  status: string;
-  date_created: string;
-  normalized: boolean;
-  open_hours: OpenHours;
-  address_type: string;
 }
 
-export interface City {
-  id: string;
-  name: string;
+export interface Phone {
+  area_code: string;
+  extension: string;
+  number: string;
+  verified: boolean;
 }
 
-export interface State {
-  id: string;
-  name: string;
+export interface AlternativePhone {
+  area_code: string;
+  extension: string;
+  number: string;
 }
 
-export interface Country {
-  id: string;
-  name: string;
+export interface BillData {
+  accept_credit_note: any;
 }
 
-export interface Neighborhood {
-  id: any;
-  name: any;
+export interface SellerReputation {
+  level_id: any;
+  power_seller_status: any;
+  transactions: Transactions;
+  metrics: Metrics;
 }
 
-export interface Municipality {
-  id: any;
-  name: any;
+export interface Transactions {
+  canceled: number;
+  completed: number;
+  period: string;
+  ratings: Ratings;
+  total: number;
 }
 
-export interface SearchLocation {
-  state: State2;
-  city: City2;
-  neighborhood: Neighborhood2;
+export interface Ratings {
+  negative: number;
+  neutral: number;
+  positive: number;
 }
 
-export interface State2 {
-  id: string;
-  name: string;
+export interface Metrics {
+  sales: Sales;
+  claims: Claims;
+  delayed_handling_time: DelayedHandlingTime;
+  cancellations: Cancellations;
 }
 
-export interface City2 {
-  id: string;
-  name: string;
+export interface Sales {
+  period: string;
+  completed: number;
 }
 
-export interface Neighborhood2 {
-  id: string;
-  name: string;
+export interface Claims {
+  period: string;
+  rate: number;
+  value: number;
 }
 
-export interface OpenHours {
-  monday: Monday[];
-  tuesday: Tuesday[];
-  wednesday: Wednesday[];
-  thursday: Thursday[];
-  friday: Friday[];
-  on_holidays: OnHolidays;
+export interface DelayedHandlingTime {
+  period: string;
+  rate: number;
+  value: number;
 }
 
-export interface Monday {
-  from: string;
-  to: string;
+export interface Cancellations {
+  period: string;
+  rate: number;
+  value: number;
 }
 
-export interface Tuesday {
-  from: string;
-  to: string;
+export interface BuyerReputation {
+  canceled_transactions: number;
+  tags: any[];
+  transactions: Transactions2;
 }
 
-export interface Wednesday {
-  from: string;
-  to: string;
+export interface Transactions2 {
+  canceled: Canceled;
+  completed: any;
+  not_yet_rated: NotYetRated;
+  period: string;
+  total: any;
+  unrated: Unrated;
 }
 
-export interface Thursday {
-  from: string;
-  to: string;
+export interface Canceled {
+  paid: any;
+  total: any;
 }
 
-export interface Friday {
-  from: string;
-  to: string;
+export interface NotYetRated {
+  paid: any;
+  total: any;
+  units: any;
 }
 
-export interface OnHolidays {
-  hours: any[];
-  status: string;
+export interface Unrated {
+  paid: any;
+  total: any;
+}
+
+export interface Status {
+  billing: Billing;
+  buy: Buy;
+  confirmed_email: boolean;
+  shopping_cart: ShoppingCart;
+  immediate_payment: boolean;
+  list: List;
+  mercadoenvios: string;
+  mercadopago_account_type: string;
+  mercadopago_tc_accepted: boolean;
+  required_action: any;
+  sell: Sell;
+  site_status: string;
+  user_type: any;
+}
+
+export interface Billing {
+  allow: boolean;
+  codes: any[];
+}
+
+export interface Buy {
+  allow: boolean;
+  codes: any[];
+  immediate_payment: ImmediatePayment;
+}
+
+export interface ImmediatePayment {
+  reasons: any[];
+  required: boolean;
+}
+
+export interface ShoppingCart {
+  buy: string;
+  sell: string;
+}
+
+export interface List {
+  allow: boolean;
+  codes: any[];
+  immediate_payment: ImmediatePayment2;
+}
+
+export interface ImmediatePayment2 {
+  reasons: any[];
+  required: boolean;
+}
+
+export interface Sell {
+  allow: boolean;
+  codes: any[];
+  immediate_payment: ImmediatePayment3;
+}
+
+export interface ImmediatePayment3 {
+  reasons: any[];
+  required: boolean;
+}
+
+export interface Company {
+  brand_name: any;
+  city_tax_id: string;
+  corporate_name: string;
+  identification: string;
+  state_tax_id: string;
+  cust_type_id: string;
+  soft_descriptor: any;
+}
+
+export interface Credit {
+  consumed: number;
+  credit_level_id: string;
+  rank: string;
+}
+
+export interface Context {
+  ip_address: string;
 }

@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
 @Schema()
-export class Admin extends Document {
+export class Refresh extends Document {
   @Prop()
   grant_type: string;
 
@@ -10,7 +10,7 @@ export class Admin extends Document {
   refresh_token: string;
 
   @Prop()
-  client_id: string;
+  user_id: number;
 }
 
-export const AdminSchema = SchemaFactory.createForClass(Admin);
+export const RefreshSchema = SchemaFactory.createForClass(Refresh);

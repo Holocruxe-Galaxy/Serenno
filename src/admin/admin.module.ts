@@ -1,18 +1,30 @@
 import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+import { ConfigModule } from '@nestjs/config';
+import { HttpModule } from '@nestjs/axios';
+
 import { AdminService } from './admin.service';
 import { AdminController } from './admin.controller';
-import { Admin } from 'mongodb';
-import { AdminSchema } from './schemas/admin.schema';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Token, TokenSchema } from './schemas/token.schema';
+import {
+  Refresh,
+  RefreshSchema,
+  MatchCode,
+  MatchCodeSchema,
+  Token,
+  TokenSchema,
+  Verifier,
+  VerifierSchema,
+} from './schemas';
 
 @Module({
   imports: [
+    ConfigModule,
+    HttpModule,
     MongooseModule.forFeature(
       [
         {
-          name: Admin.name,
-          schema: AdminSchema,
+          name: Refresh.name,
+          schema: RefreshSchema,
         },
       ],
       'ADMIN',
@@ -25,6 +37,24 @@ import { Token, TokenSchema } from './schemas/token.schema';
         },
       ],
       'TOKEN',
+    ),
+    MongooseModule.forFeature(
+      [
+        {
+          name: Verifier.name,
+          schema: VerifierSchema,
+        },
+      ],
+      'ADMIN',
+    ),
+    MongooseModule.forFeature(
+      [
+        {
+          name: MatchCode.name,
+          schema: MatchCodeSchema,
+        },
+      ],
+      'ADMIN',
     ),
   ],
   controllers: [AdminController],

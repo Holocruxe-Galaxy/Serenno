@@ -1,8 +1,9 @@
 export interface CoreData {
   id: number;
+  buyer: string;
   address: string;
   zipCode: string;
   deliveryPreferences: string;
   seller: string;
-  buyer: string;
+  sellerAddress: string;
 }

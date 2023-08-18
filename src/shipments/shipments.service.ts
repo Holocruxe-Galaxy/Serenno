@@ -33,16 +33,17 @@ export class ShipmentsService {
         notification.resource,
       );
 
-      const seller = await this.getDataFromApi<Seller[]>(
+      const seller = await this.getDataFromApi<Seller>(
         headers,
-        `/users/${shipment.origin.sender_id}/addresses`,
+        `/users/${shipment.origin.sender_id}`,
       );
 
       const destinationData = shipment.destination.shipping_address;
 
       const coreData: CoreData = {
         id: shipment.id,
-        seller: seller[0].contact,
+        seller: seller.nickname,
+        sellerAddress: seller.address.address,
         buyer: shipment.destination.receiver_name,
         address: destinationData.address_line,
         zipCode: destinationData.zip_code,
@@ -62,6 +63,7 @@ export class ShipmentsService {
 
       return { coreData };
     } catch (error) {
+      console.log(error);
       throw new HttpException(error.message, error.status);
     }
   }
