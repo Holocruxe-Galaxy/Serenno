@@ -87,6 +87,9 @@ export class ShipmentsService {
   }
 
   async findAll() {
-    return await this.shippingModel.find().select('coreData');
+    return await this.shippingModel
+      .find()
+      .select('coreData')
+      .sort({ createdAt: -1 });
   }
 }

@@ -17,9 +17,10 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
   const LOCAL = configService.get<string>('LOCAL');
+  const FRONT = configService.get<string>('FRONT');
 
   app.enableCors({
-    origin: '*',
+    origin: FRONT,
     credentials: true,
   });
 
