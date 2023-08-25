@@ -4,8 +4,6 @@ import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { randomBytes, createHash } from 'crypto';
 
-import { CreateAdminDto } from './dto/create-admin.dto';
-
 import { Refresh, MatchCode, Token, Verifier } from './schemas';
 import { Model } from 'mongoose';
 
@@ -107,6 +105,11 @@ export class AdminService {
         code_verifier: verifier.verifier,
       });
       await this.createAccessToken(data);
+      await this.createRefresh({
+        refresh_token: data.refresh_token as string,
+        user_id: data.user_id as number,
+        grant_type: 'refresh_token',
+      });
 
       await this.changePasswordState({ code: password }, false);
       verifier.deleteOne();
@@ -138,12 +141,20 @@ export class AdminService {
   }
 
   private async createAccessToken({ access_token, user_id }: TokenCreateInfo) {
-    await this.tokenModel.create({ access_token, user_id });
+    const existingToken = this.tokenModel.findOne({ user_id });
+
+    if (!existingToken)
+      return await this.tokenModel.create({ access_token, user_id });
+
+    return await this.tokenModel.findOneAndUpdate(
+      { user_id },
+      { access_token },
+    );
   }
 
-  async createRefresh(createAdminDto: CreateAdminDto) {
-    delete createAdminDto.client_secret;
-
+  async createRefresh(
+    createAdminDto: Pick<Refresh, 'grant_type' | 'refresh_token' | 'user_id'>,
+  ) {
     await this.refreshModel.create(createAdminDto);
     return 'Admin created.';
   }

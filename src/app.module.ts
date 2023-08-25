@@ -7,6 +7,7 @@ import { NotificationModule } from './notification/notification.module';
 import { ShipmentsModule } from './shipments/shipments.module';
 import { UserModule } from './user/user.module';
 import { AdminModule } from './admin/admin.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { AdminModule } from './admin/admin.module';
     ShipmentsModule,
     UserModule,
     AdminModule,
+    AuthModule,
   ],
   controllers: [],
   providers: [],
