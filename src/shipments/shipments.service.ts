@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { InjectModel } from '@nestjs/mongoose';
@@ -9,6 +9,7 @@ import { Token } from 'src/admin/schemas/token.schema';
 import { Shipment } from './schemas/shipment.schema';
 import { NotificationDto } from 'src/notification/dto/notification.dto';
 import { CoreData, Seller, Shipping } from './interfaces';
+import { AdminService } from 'src/admin/admin.service';
 
 @Injectable()
 export class ShipmentsService {
@@ -16,6 +17,8 @@ export class ShipmentsService {
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
     @InjectModel(Shipment.name) private readonly shippingModel: Model<Shipment>,
+    @Inject(AdminService)
+    private readonly adminService: AdminService,
   ) {}
 
   async create(notification: NotificationDto, token: Token) {
@@ -63,8 +66,14 @@ export class ShipmentsService {
 
       return { coreData };
     } catch (error) {
-      console.log(error);
-      throw new HttpException(error.message, error.status);
+      if (error.response.status === 401) {
+        const newToken = await this.adminService.exchangeRefreshForAccessToken(
+          token,
+        );
+        this.create(notification, newToken);
+      } else {
+        console.log(error);
+      }
     }
   }
 
