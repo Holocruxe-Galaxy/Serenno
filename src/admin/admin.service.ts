@@ -118,6 +118,23 @@ export class AdminService {
     }
   }
 
+  async exchangeRefreshForAccessToken({ user_id }: Token): Promise<Token> {
+    const { grant_type, refresh_token: code } = await this.refreshModel.findOne(
+      {
+        user_id,
+      },
+    );
+
+    const { data } = await this.callForToken({ grant_type, code });
+
+    await this.createRefresh({
+      refresh_token: data.refresh_token as string,
+      user_id: data.user_id as number,
+      grant_type: 'refresh_token',
+    });
+    return await this.createAccessToken(data);
+  }
+
   private async getVerifier(password: PasswordListType) {
     return await this.verifierModel.findOne({ password });
   }
@@ -149,6 +166,7 @@ export class AdminService {
     return await this.tokenModel.findOneAndUpdate(
       { user_id },
       { access_token },
+      { new: true },
     );
   }
 

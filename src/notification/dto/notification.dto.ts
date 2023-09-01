@@ -28,3 +28,8 @@ export class NotificationDto {
   @IsDate()
   received: Date;
 }
+
+export class LostNotificationDto extends NotificationDto {
+  @IsString()
+  access_token: string;
+}
