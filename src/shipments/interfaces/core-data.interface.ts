@@ -6,4 +6,5 @@ export interface CoreData {
   deliveryPreferences: string;
   seller: string;
   sellerAddress: string;
+  deliveryTime?: string;
 }
