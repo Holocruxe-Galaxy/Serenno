@@ -43,6 +43,9 @@ export class ShipmentsService {
 
       const destinationData = shipment.destination.shipping_address;
 
+      const date = new Date(shipment.lead_time.estimated_delivery_time.date);
+      const deliveryTime = new Intl.DateTimeFormat('sp-Mx').format(date);
+
       const coreData: CoreData = {
         id: shipment.id,
         seller: seller.nickname,
@@ -51,6 +54,7 @@ export class ShipmentsService {
         address: destinationData.address_line,
         zipCode: destinationData.zip_code,
         deliveryPreferences: destinationData.delivery_preference,
+        deliveryTime,
       };
 
       if (exists) {
@@ -98,6 +102,23 @@ export class ShipmentsService {
     const id = Number(resource.split('/')[2]);
 
     return await this.shippingModel.findOne({ 'coreData.id': id });
+  }
+
+  async assignDates() {
+    const shipments = await this.findAll();
+
+    for (const shipment of shipments) {
+      if (shipment.shipment.lead_time.estimated_delivery_time.date) {
+        const date = new Date(
+          shipment.shipment.lead_time.estimated_delivery_time.date,
+        );
+        const deliveryTime = new Intl.DateTimeFormat('sp-Mx').format(date);
+
+        await shipment.updateOne({
+          coreData: { ...shipment.coreData, deliveryTime },
+        });
+      }
+    }
   }
 
   async findAll() {
