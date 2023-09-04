@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, HttpException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { InjectModel } from '@nestjs/mongoose';
@@ -21,16 +21,16 @@ export class ShipmentsService {
     private readonly adminService: AdminService,
   ) {}
 
-  async create(notification: NotificationDto, token: Token) {
+  async create(notification: NotificationDto, token?: Token) {
     const exists = await this.checkIfExists(notification.resource);
 
-    const headers: AxiosRequestConfig = {
-      headers: {
-        Authorization: `Bearer ${token.access_token}`,
-        'x-format-new': true,
-      },
-    };
     try {
+      const headers: AxiosRequestConfig = {
+        headers: {
+          Authorization: `Bearer ${token.access_token}`,
+          'x-format-new': true,
+        },
+      };
       const shipment = await this.getDataFromApi<Shipping>(
         headers,
         notification.resource,
@@ -66,7 +66,12 @@ export class ShipmentsService {
 
       return { coreData };
     } catch (error) {
-      if (error.response.status === 401) {
+      if (!error.response)
+        throw new HttpException(
+          'Hubo un error inesperado. Por favor avise cuanto antes al desarrollador.',
+          400,
+        );
+      if (error.response.status === 400 || error.response.status === 401) {
         const newToken = await this.adminService.exchangeRefreshForAccessToken(
           token,
         );
