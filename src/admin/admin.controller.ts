@@ -18,6 +18,11 @@ export class AdminController {
     return this.adminService.getAccessToken(generationData);
   }
 
+  // @Post('refresh')
+  // async refresh(@Body() generationData: any) {
+  //   return this.adminService.exchangeRefreshForAccessToken(generationData);
+  // }
+
   @Get('all')
   getAllUris() {
     return this.adminService.getAllUris();

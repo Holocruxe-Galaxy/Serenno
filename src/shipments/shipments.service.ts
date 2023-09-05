@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { Inject, Injectable, HttpException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { InjectModel } from '@nestjs/mongoose';
@@ -9,6 +9,7 @@ import { Token } from 'src/admin/schemas/token.schema';
 import { Shipment } from './schemas/shipment.schema';
 import { NotificationDto } from 'src/notification/dto/notification.dto';
 import { CoreData, Seller, Shipping } from './interfaces';
+import { AdminService } from 'src/admin/admin.service';
 
 @Injectable()
 export class ShipmentsService {
@@ -16,18 +17,20 @@ export class ShipmentsService {
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
     @InjectModel(Shipment.name) private readonly shippingModel: Model<Shipment>,
+    @Inject(AdminService)
+    private readonly adminService: AdminService,
   ) {}
 
-  async create(notification: NotificationDto, token: Token) {
+  async create(notification: NotificationDto, token?: Token) {
     const exists = await this.checkIfExists(notification.resource);
 
-    const headers: AxiosRequestConfig = {
-      headers: {
-        Authorization: `Bearer ${token.access_token}`,
-        'x-format-new': true,
-      },
-    };
     try {
+      const headers: AxiosRequestConfig = {
+        headers: {
+          Authorization: `Bearer ${token.access_token}`,
+          'x-format-new': true,
+        },
+      };
       const shipment = await this.getDataFromApi<Shipping>(
         headers,
         notification.resource,
@@ -40,6 +43,9 @@ export class ShipmentsService {
 
       const destinationData = shipment.destination.shipping_address;
 
+      const date = new Date(shipment.lead_time.estimated_delivery_time.date);
+      const deliveryTime = new Intl.DateTimeFormat('sp-Mx').format(date);
+
       const coreData: CoreData = {
         id: shipment.id,
         seller: seller.nickname,
@@ -48,6 +54,7 @@ export class ShipmentsService {
         address: destinationData.address_line,
         zipCode: destinationData.zip_code,
         deliveryPreferences: destinationData.delivery_preference,
+        deliveryTime,
       };
 
       if (exists) {
@@ -63,8 +70,19 @@ export class ShipmentsService {
 
       return { coreData };
     } catch (error) {
-      console.log(error);
-      throw new HttpException(error.message, error.status);
+      if (!error.response)
+        throw new HttpException(
+          'Hubo un error inesperado. Por favor avise cuanto antes al desarrollador.',
+          400,
+        );
+      if (error.response.status === 400 || error.response.status === 401) {
+        const newToken = await this.adminService.exchangeRefreshForAccessToken(
+          token,
+        );
+        this.create(notification, newToken);
+      } else {
+        console.log(error);
+      }
     }
   }
 
@@ -84,6 +102,23 @@ export class ShipmentsService {
     const id = Number(resource.split('/')[2]);
 
     return await this.shippingModel.findOne({ 'coreData.id': id });
+  }
+
+  async assignDates() {
+    const shipments = await this.findAll();
+
+    for (const shipment of shipments) {
+      if (shipment.shipment.lead_time.estimated_delivery_time.date) {
+        const date = new Date(
+          shipment.shipment.lead_time.estimated_delivery_time.date,
+        );
+        const deliveryTime = new Intl.DateTimeFormat('sp-Mx').format(date);
+
+        await shipment.updateOne({
+          coreData: { ...shipment.coreData, deliveryTime },
+        });
+      }
+    }
   }
 
   async findAll() {

@@ -242,7 +242,7 @@ export interface EstimatedHandlingLimit {
 }
 
 export interface EstimatedDeliveryTime {
-  date: string;
+  date: Date;
   pay_before: string;
   schedule: any;
   unit: string;

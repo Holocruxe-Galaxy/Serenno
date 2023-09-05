@@ -12,8 +12,9 @@ import { PasswordListType } from './types/password.type';
 
 interface RequestBody {
   grant_type: string;
-  code: string;
+  code?: string;
   code_verifier?: string;
+  refresh_token?: string;
 }
 
 type MatchCodeQuery = Partial<Pick<MatchCode, 'used' | 'code'>>;
@@ -97,6 +98,7 @@ export class AdminService {
     const grant_type = 'authorization_code';
     try {
       const verifier = await this.getVerifier(password);
+
       if (!verifier) throw new BadRequestException(wrongKey);
 
       const { data } = await this.callForToken({
@@ -104,7 +106,11 @@ export class AdminService {
         code,
         code_verifier: verifier.verifier,
       });
+      await this.changePasswordState({ code: password }, false);
+      verifier.deleteOne();
+
       await this.createAccessToken(data);
+
       await this.createRefresh({
         refresh_token: data.refresh_token as string,
         user_id: data.user_id as number,
@@ -114,7 +120,27 @@ export class AdminService {
       await this.changePasswordState({ code: password }, false);
       verifier.deleteOne();
     } catch (error) {
+      console.log(error);
       throw new BadRequestException(wrongKey);
+    }
+  }
+
+  async exchangeRefreshForAccessToken({ user_id }: Token): Promise<Token> {
+    try {
+      const { grant_type, refresh_token } = await this.refreshModel.findOne({
+        user_id,
+      });
+      const { data } = await this.callForToken({ grant_type, refresh_token });
+
+      await this.createRefresh({
+        refresh_token: data.refresh_token as string,
+        user_id: data.user_id as number,
+        grant_type: 'refresh_token',
+      });
+      return await this.createAccessToken(data);
+    } catch (error) {
+      console.log(error);
+      if (error.response.status === 400) throw new BadRequestException(error);
     }
   }
 
@@ -122,7 +148,12 @@ export class AdminService {
     return await this.verifierModel.findOne({ password });
   }
 
-  private async callForToken({ grant_type, code, code_verifier }: RequestBody) {
+  private async callForToken({
+    grant_type,
+    code,
+    code_verifier,
+    refresh_token,
+  }: RequestBody) {
     try {
       return await this.httpService.axiosRef.post(
         `${this.configService.get('MERCADO')}/oauth/token`,
@@ -130,33 +161,53 @@ export class AdminService {
           client_secret: this.configService.get('CLIENT_SECRET'),
           client_id: this.configService.get('CLIENT_ID'),
           grant_type,
-          code,
+          ...(code && { code }),
           redirect_uri: this.configService.get('REDIRECT_URI'),
           ...(code_verifier && { code_verifier }),
+          ...(refresh_token && { refresh_token }),
         },
       );
     } catch (error) {
+      console.log(error);
       throw new BadRequestException(error.response.data.error_description);
     }
   }
 
   private async createAccessToken({ access_token, user_id }: TokenCreateInfo) {
-    const existingToken = this.tokenModel.findOne({ user_id });
-
+    const existingToken = await this.tokenModel.findOne({ user_id });
     if (!existingToken)
       return await this.tokenModel.create({ access_token, user_id });
 
     return await this.tokenModel.findOneAndUpdate(
       { user_id },
       { access_token },
+      { new: true },
     );
   }
 
   async createRefresh(
     createAdminDto: Pick<Refresh, 'grant_type' | 'refresh_token' | 'user_id'>,
   ) {
-    await this.refreshModel.create(createAdminDto);
-    return 'Admin created.';
+    try {
+      const existingToken = await this.refreshModel.findOne({
+        user_id: createAdminDto.user_id,
+      });
+
+      if (!existingToken) await this.refreshModel.create(createAdminDto);
+      else {
+        await this.refreshModel.findOneAndUpdate(
+          { user_id: createAdminDto.user_id },
+          createAdminDto,
+          {
+            new: true,
+          },
+        );
+      }
+
+      return 'Admin created.';
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async findAll(): Promise<Token> {

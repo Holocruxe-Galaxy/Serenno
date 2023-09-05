@@ -8,6 +8,8 @@ import { ShipmentsModule } from './shipments/shipments.module';
 import { UserModule } from './user/user.module';
 import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -42,7 +44,7 @@ import { AuthModule } from './auth/auth.module';
     AdminModule,
     AuthModule,
   ],
-  controllers: [],
-  providers: [],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

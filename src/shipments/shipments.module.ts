@@ -6,6 +6,7 @@ import { Shipment, ShipmentSchema } from './schemas/shipment.schema';
 import { ShipmentsService } from './shipments.service';
 import { ShipmentsController } from './shipments.controller';
 import { ShipmentsGateway } from './shipments.gateway';
+import { AdminModule } from 'src/admin/admin.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { ShipmentsGateway } from './shipments.gateway';
         schema: ShipmentSchema,
       },
     ]),
+    AdminModule,
   ],
   controllers: [ShipmentsController],
   providers: [ShipmentsService, ShipmentsGateway],
