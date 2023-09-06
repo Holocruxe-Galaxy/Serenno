@@ -19,16 +19,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       secretOrKey: configService.get('JWT_SECRET'),
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request) => {
-          return request?.cookies?.Authorization;
+          return request?.headers?.Authorization;
         },
       ]),
     });
   }
 
   async validate(payload: JwtPayload): Promise<User> {
-    const { username } = payload;
+    const { id } = payload;
 
-    const user: User = await this.userModel.findOne({ username });
+    const user: User = await this.userModel.findOne({ id });
 
     if (!user) throw new UnauthorizedException('Invalid token.');
 

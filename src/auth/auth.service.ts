@@ -1,5 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { BadRequestException } from '@nestjs/common/exceptions';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common/exceptions';
+import { ConfigService } from '@nestjs/config';
 import { compareSync, hashSync } from 'bcrypt';
 import { LoginDto } from './dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
@@ -15,7 +21,7 @@ import { User } from 'src/user/schemas/user.schema';
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly jwtStrategy: JwtStrategy,
+    private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
     @InjectModel(User.name)
     private readonly userModel: Model<User>,
@@ -23,17 +29,57 @@ export class AuthService {
     private readonly userService: UserService,
   ) {}
 
+  async create(createAuthDto: LoginDto) {
+    try {
+      const { password, ...userData } = createAuthDto;
+
+      await this.userService.create({
+        ...userData,
+        password: hashSync(password, 12),
+      });
+
+      // return { ...user, token: this.setJwtToken({ username: user.username }) };
+    } catch (error) {
+      this.handleExceptions(error, 'A user');
+    }
+  }
+
   async login({ username, password }: LoginDto): Promise<any> {
-    const user = await this.userModel.findOne({ username });
+    const userWithPassword = await this.userModel.findOne({ username });
 
-    if (!user)
+    if (!userWithPassword)
       throw new BadRequestException('The username introduced is incorrect.');
-    if (!compareSync(password, user.password))
+    if (!compareSync(password, userWithPassword.password))
       throw new BadRequestException('The password introduced is incorrect.');
-    const token = this.setJwtToken({ username: user.username });
-    const cookie = this.createCookie(token);
 
-    return { user, cookie };
+    const user = userWithPassword.toObject();
+    const accessToken = this.setJwtToken({ id: user._id, role: user.role });
+    delete user.password;
+
+    return { userData: user, accessToken };
+  }
+
+  async validate(token: any) {
+    try {
+      this.jwtService.verify(token, this.configService.get('JWT_SECRET'));
+      const { id, role }: any = this.jwtService.decode(token);
+
+      return { userData: { id, role } };
+    } catch (error) {
+      if (error.name === 'TokenExpiredError') {
+        const { id, role }: any = this.jwtService.decode(token);
+
+        const userWithPassword = await this.userModel.findById(id);
+        if (userWithPassword) {
+          const user = userWithPassword.toObject();
+          delete user.password;
+
+          const accessToken = this.setJwtToken({ id, role });
+          return { userData: user, token: accessToken };
+        }
+        throw new UnauthorizedException('El usuario no es válido.');
+      }
+    }
   }
 
   // async verification_token(request: Request, tokenAuthDto: TokenAuthDto) {
@@ -62,6 +108,38 @@ export class AuthService {
   }
 
   private setJwtToken(payload: JwtPayload) {
-    return this.jwtService.sign(payload);
+    return this.jwtService.sign(payload, {
+      secret: this.configService.get('JWT_SECRET'),
+      expiresIn: 60 * 60 * 24 * 365,
+    });
+  }
+
+  private handleExceptions(error: any, entity?: string): never {
+    this.lowerlevelExceptionHandler(error);
+
+    console.error(error.message);
+
+    if (error.code === 11000) {
+      throw new BadRequestException({
+        message: `${entity || 'An entity'} with that ${
+          Object.keys(error.keyPattern)[0]
+        } already exists in the database ${JSON.stringify(error.keyValue)}`,
+      });
+    }
+
+    throw new InternalServerErrorException(
+      `Something went wrong. ${error.message}`,
+    );
+  }
+
+  private lowerlevelExceptionHandler(error: any): void {
+    if (error.name === 'BadRequestException')
+      throw new BadRequestException(error.message);
+    if (error.name === 'InternalServerErrorException')
+      throw new InternalServerErrorException(error.message);
+    if (error.name === 'NotFoundException')
+      throw new NotFoundException(error.message);
+    if (error.name === 'UnauthorizedException')
+      throw new UnauthorizedException(error.message);
   }
 }
