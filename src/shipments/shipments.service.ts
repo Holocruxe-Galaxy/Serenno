@@ -44,7 +44,7 @@ export class ShipmentsService {
       const destinationData = shipment.destination.shipping_address;
 
       const date = new Date(shipment.lead_time.estimated_delivery_time.date);
-      const deliveryTime = new Intl.DateTimeFormat('sp-Mx').format(date);
+      const deliveryTime = new Intl.DateTimeFormat('en-GB').format(date);
 
       const coreData: CoreData = {
         id: shipment.id,
@@ -104,6 +104,7 @@ export class ShipmentsService {
     return await this.shippingModel.findOne({ 'coreData.id': id });
   }
 
+  // It's necessary to comment the line .select('coreData') from this.findAll
   async assignDates() {
     const shipments = await this.findAll();
 
@@ -112,7 +113,7 @@ export class ShipmentsService {
         const date = new Date(
           shipment.shipment.lead_time.estimated_delivery_time.date,
         );
-        const deliveryTime = new Intl.DateTimeFormat('sp-Mx').format(date);
+        const deliveryTime = new Intl.DateTimeFormat('en-GB').format(date);
 
         await shipment.updateOne({
           coreData: { ...shipment.coreData, deliveryTime },
