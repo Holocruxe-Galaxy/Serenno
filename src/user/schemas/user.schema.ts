@@ -4,7 +4,16 @@ import { Document } from 'mongoose';
 @Schema()
 export class User extends Document {
   @Prop({ unique: true })
-  name: string;
+  username: string;
+
+  @Prop({ required: true })
+  password: string;
+
+  @Prop()
+  role: string;
+
+  @Prop()
+  token: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
