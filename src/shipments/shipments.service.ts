@@ -23,7 +23,6 @@ export class ShipmentsService {
 
   async create(notification: NotificationDto, token?: Token) {
     const exists = await this.checkIfExists(notification.resource);
-
     try {
       const headers: AxiosRequestConfig = {
         headers: {
@@ -55,6 +54,12 @@ export class ShipmentsService {
         zipCode: destinationData.zip_code,
         deliveryPreferences: destinationData.delivery_preference,
         deliveryTime,
+        originLatitude: shipment.origin.shipping_address.latitude,
+        originLongitude: shipment.origin.shipping_address.longitude,
+        destinationLatitude: destinationData.latitude,
+        destinationLongitude: destinationData.longitude,
+        deliveryType: shipment.lead_time.shipping_method.type,
+        status: shipment.status,
       };
 
       if (exists) {
@@ -110,16 +115,39 @@ export class ShipmentsService {
 
     for (const shipment of shipments) {
       if (shipment.shipment.lead_time.estimated_delivery_time.date) {
-        const date = new Date(
-          shipment.shipment.lead_time.estimated_delivery_time.date,
-        );
-        const deliveryTime = new Intl.DateTimeFormat('en-GB').format(date);
-
         await shipment.updateOne({
-          coreData: { ...shipment.coreData, deliveryTime },
+          coreData: {
+            ...shipment.coreData,
+            originLatitude: shipment.shipment.origin.shipping_address.latitude,
+            originLongitude:
+              shipment.shipment.origin.shipping_address.longitude,
+            destinationLatitude:
+              shipment.shipment.destination.shipping_address.latitude,
+            destinationLongitude:
+              shipment.shipment.destination.shipping_address.longitude,
+            deliveryType: shipment.shipment.lead_time.shipping_method.type,
+            status: shipment.shipment.status,
+          },
         });
       }
     }
+  }
+
+  async findAllDeliveryTypes() {
+    const shipments = await this.findAll();
+    const delivery: string[] = [];
+
+    for (const shipment of shipments) {
+      console.log(shipment);
+      if (shipment?.shipment?.lead_time) {
+        console.log('hi');
+        if (
+          !delivery.includes(shipment.shipment.lead_time.shipping_method.type)
+        )
+          delivery.push(shipment.shipment.lead_time.shipping_method.type);
+      }
+    }
+    console.log(delivery);
   }
 
   async findAll() {
