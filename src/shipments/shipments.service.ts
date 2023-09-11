@@ -156,4 +156,12 @@ export class ShipmentsService {
       .select('coreData')
       .sort({ createdAt: -1 });
   }
+
+  async createOrder(order: any) {
+    return 'hi';
+  }
+
+  async orderByShipmentId(shipment: number) {
+    return 'hi';
+  }
 }
