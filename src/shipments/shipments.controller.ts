@@ -15,6 +15,11 @@ export class ShipmentsController {
   //   return this.shipmentsService.assignDates();
   // }
 
+  // @Get('delivery')
+  // delivery() {
+  //   return this.shipmentsService.findAllDeliveryTypes();
+  // }
+
   @Get()
   findAll() {
     return this.shipmentsService.findAll();
