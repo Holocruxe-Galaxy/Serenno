@@ -13,5 +13,5 @@ export interface CoreData {
   destinationLongitude: number;
   status: string;
   deliveryType: string;
-  sellingId?: string;
+  order?: number | string;
 }

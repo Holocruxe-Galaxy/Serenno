@@ -10,6 +10,7 @@ import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { AppService } from './app.service';
     UserModule,
     AdminModule,
     AuthModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

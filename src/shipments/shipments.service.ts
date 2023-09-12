@@ -10,6 +10,7 @@ import { Shipment } from './schemas/shipment.schema';
 import { NotificationDto } from 'src/notification/dto/notification.dto';
 import { CoreData, Seller, Shipping } from './interfaces';
 import { AdminService } from 'src/admin/admin.service';
+import { OrdersService } from 'src/orders/orders.service';
 
 @Injectable()
 export class ShipmentsService {
@@ -19,6 +20,8 @@ export class ShipmentsService {
     @InjectModel(Shipment.name) private readonly shippingModel: Model<Shipment>,
     @Inject(AdminService)
     private readonly adminService: AdminService,
+    @Inject(OrdersService)
+    private readonly orderService: OrdersService,
   ) {}
 
   async create(notification: NotificationDto, token?: Token) {
@@ -41,7 +44,7 @@ export class ShipmentsService {
       );
 
       const destinationData = shipment.destination.shipping_address;
-
+      const order = await this.orderService.findOne(shipment.id);
       const date = new Date(shipment.lead_time.estimated_delivery_time.date);
       const deliveryTime = new Intl.DateTimeFormat('en-GB').format(date);
 
@@ -60,6 +63,7 @@ export class ShipmentsService {
         destinationLongitude: destinationData.longitude,
         deliveryType: shipment.lead_time.shipping_method.type,
         status: shipment.status,
+        order: order.order.id || 'Sin código disponible',
       };
 
       if (exists) {
@@ -114,19 +118,12 @@ export class ShipmentsService {
     const shipments = await this.findAll();
 
     for (const shipment of shipments) {
-      if (shipment.shipment.lead_time.estimated_delivery_time.date) {
+      const order = await this.orderService.findOne(shipment.shipment.id);
+      if (!order) {
         await shipment.updateOne({
           coreData: {
             ...shipment.coreData,
-            originLatitude: shipment.shipment.origin.shipping_address.latitude,
-            originLongitude:
-              shipment.shipment.origin.shipping_address.longitude,
-            destinationLatitude:
-              shipment.shipment.destination.shipping_address.latitude,
-            destinationLongitude:
-              shipment.shipment.destination.shipping_address.longitude,
-            deliveryType: shipment.shipment.lead_time.shipping_method.type,
-            status: shipment.shipment.status,
+            order: order.order.id || 'Sin código disponible',
           },
         });
       }
