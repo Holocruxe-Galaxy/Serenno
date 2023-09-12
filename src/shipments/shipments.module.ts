@@ -7,6 +7,7 @@ import { ShipmentsService } from './shipments.service';
 import { ShipmentsController } from './shipments.controller';
 import { ShipmentsGateway } from './shipments.gateway';
 import { AdminModule } from 'src/admin/admin.module';
+import { OrdersModule } from 'src/orders/orders.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AdminModule } from 'src/admin/admin.module';
       },
     ]),
     AdminModule,
+    OrdersModule,
   ],
   controllers: [ShipmentsController],
   providers: [ShipmentsService, ShipmentsGateway],

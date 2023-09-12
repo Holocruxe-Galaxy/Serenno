@@ -27,4 +27,8 @@ export class NotificationService {
       if (error.code === 11000) return;
     }
   }
+
+  async findByTopic(topic: string) {
+    return await this.notificationModel.find({ topic });
+  }
 }

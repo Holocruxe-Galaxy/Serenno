@@ -8,6 +8,7 @@ import {
   NotificationSchema,
 } from './schemas/notification.schema';
 import { AdminModule } from 'src/admin/admin.module';
+import { OrdersModule } from 'src/orders/orders.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AdminModule } from 'src/admin/admin.module';
     ]),
     AdminModule,
     ShipmentsModule,
+    OrdersModule,
   ],
   controllers: [NotificationController],
   providers: [NotificationService],
