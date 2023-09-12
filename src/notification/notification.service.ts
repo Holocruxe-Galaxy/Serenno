@@ -29,6 +29,6 @@ export class NotificationService {
   }
 
   async findByTopic(topic: string) {
-    return await this.notificationModel.find({ topic });
+    return await this.notificationModel.find({ topic }).sort({ received: -1 });
   }
 }

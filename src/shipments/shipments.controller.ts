@@ -10,10 +10,10 @@ export class ShipmentsController {
     return this.shipmentsService.create(token, token as any);
   }
 
-  // @Get('dates')
-  // dates() {
-  //   return this.shipmentsService.assignDates();
-  // }
+  @Get('dates')
+  dates() {
+    return this.shipmentsService.assignDates();
+  }
 
   // @Get('delivery')
   // delivery() {

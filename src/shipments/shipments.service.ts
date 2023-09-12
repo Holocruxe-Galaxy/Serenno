@@ -119,14 +119,12 @@ export class ShipmentsService {
 
     for (const shipment of shipments) {
       const order = await this.orderService.findOne(shipment.shipment.id);
-      if (!order) {
-        await shipment.updateOne({
-          coreData: {
-            ...shipment.coreData,
-            order: order.order.id || 'Sin código disponible',
-          },
-        });
-      }
+      await shipment.updateOne({
+        coreData: {
+          ...shipment.coreData,
+          order: order?.order?.id || 'Sin código disponible',
+        },
+      });
     }
   }
 
