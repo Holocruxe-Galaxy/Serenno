@@ -10,15 +10,22 @@ export class ShipmentsController {
     return this.shipmentsService.create(token, token as any);
   }
 
-  @Get('dates')
-  dates() {
-    return this.shipmentsService.assignDates();
-  }
+  // @Get('dates')
+  // dates() {
+  //   return this.shipmentsService.assignDates();
+  // }
 
   // @Get('delivery')
   // delivery() {
   //   return this.shipmentsService.findAllDeliveryTypes();
   // }
+
+  @Post('populate')
+  populate(
+    @Body() token: Pick<LostNotificationDto, 'access_token' | 'user_id'>,
+  ) {
+    return this.shipmentsService.populate(token as any);
+  }
 
   @Get()
   findAll() {
