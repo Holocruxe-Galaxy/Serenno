@@ -1,4 +1,4 @@
-import { Inject, Injectable, HttpException } from '@nestjs/common';
+import { HttpException, Inject, Injectable, forwardRef } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { InjectModel } from '@nestjs/mongoose';
@@ -11,6 +11,7 @@ import { NotificationDto } from 'src/notification/dto/notification.dto';
 import { CoreData, Seller, Shipping } from './interfaces';
 import { AdminService } from 'src/admin/admin.service';
 import { OrdersService } from 'src/orders/orders.service';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
 export class ShipmentsService {
@@ -20,6 +21,8 @@ export class ShipmentsService {
     @InjectModel(Shipment.name) private readonly shippingModel: Model<Shipment>,
     @Inject(AdminService)
     private readonly adminService: AdminService,
+    @Inject(forwardRef(() => NotificationService))
+    private readonly notificationService: NotificationService,
     @Inject(OrdersService)
     private readonly orderService: OrdersService,
   ) {}
@@ -63,7 +66,7 @@ export class ShipmentsService {
         destinationLongitude: destinationData.longitude,
         deliveryType: shipment.lead_time.shipping_method.type,
         status: shipment.status,
-        order: order.order.id || 'Sin código disponible',
+        order: order?.order?.id || 'Sin código disponible',
       };
 
       if (exists) {
@@ -79,6 +82,7 @@ export class ShipmentsService {
 
       return { coreData };
     } catch (error) {
+      console.log(error);
       if (!error.response)
         throw new HttpException(
           'Hubo un error inesperado. Por favor avise cuanto antes al desarrollador.',
@@ -119,14 +123,12 @@ export class ShipmentsService {
 
     for (const shipment of shipments) {
       const order = await this.orderService.findOne(shipment.shipment.id);
-      if (!order) {
-        await shipment.updateOne({
-          coreData: {
-            ...shipment.coreData,
-            order: order.order.id || 'Sin código disponible',
-          },
-        });
-      }
+      await shipment.updateOne({
+        coreData: {
+          ...shipment.coreData,
+          order: order?.order?.id || 'Sin código disponible',
+        },
+      });
     }
   }
 
@@ -152,5 +154,15 @@ export class ShipmentsService {
       .find()
       .select('coreData')
       .sort({ createdAt: -1 });
+  }
+
+  async populate(token?: Token) {
+    const resources = await this.notificationService.findByTopic('shipments');
+    const ids: number[] = [];
+    for (const res of resources) {
+      if (res.user_id === token.user_id) await this.create(res, token);
+      else if (!ids.includes(res.user_id)) ids.push(res.user_id);
+    }
+    return ids;
   }
 }

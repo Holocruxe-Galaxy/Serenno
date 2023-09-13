@@ -20,6 +20,13 @@ export class ShipmentsController {
   //   return this.shipmentsService.findAllDeliveryTypes();
   // }
 
+  @Post('populate')
+  populate(
+    @Body() token: Pick<LostNotificationDto, 'access_token' | 'user_id'>,
+  ) {
+    return this.shipmentsService.populate(token as any);
+  }
+
   @Get()
   findAll() {
     return this.shipmentsService.findAll();
