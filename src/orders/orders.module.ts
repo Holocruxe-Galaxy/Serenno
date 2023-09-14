@@ -7,6 +7,7 @@ import { Order, OrderSchema } from './schemas/order.schema';
 import { OrdersController } from './orders.controller';
 import { NotificationModule } from 'src/notification/notification.module';
 import { AdminModule } from 'src/admin/admin.module';
+import { ShipmentsModule } from 'src/shipments/shipments.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AdminModule } from 'src/admin/admin.module';
     ]),
     forwardRef(() => NotificationModule),
     AdminModule,
+    forwardRef(() => ShipmentsModule),
   ],
   controllers: [OrdersController],
   providers: [OrdersService],

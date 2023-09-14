@@ -149,6 +149,13 @@ export class ShipmentsService {
     console.log(delivery);
   }
 
+  async findByCoreDataIdAndAddOrder(id: number, order: number) {
+    const shipment = await this.shippingModel.findOne({ 'coreData.id': id });
+
+    if (shipment)
+      await shipment.updateOne({ $set: { 'coreData.order': order } });
+  }
+
   async findAll() {
     return await this.shippingModel
       .find()
