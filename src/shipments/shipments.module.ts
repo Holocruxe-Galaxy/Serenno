@@ -26,6 +26,6 @@ import { NotificationModule } from 'src/notification/notification.module';
   ],
   controllers: [ShipmentsController],
   providers: [ShipmentsService, ShipmentsGateway],
-  exports: [ShipmentsGateway],
+  exports: [ShipmentsService, ShipmentsGateway],
 })
 export class ShipmentsModule {}
