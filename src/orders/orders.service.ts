@@ -26,6 +26,7 @@ export class OrdersService {
     private readonly adminService: AdminService,
   ) {}
   async create(notification: NotificationDto, token?: Token) {
+    console.log('ohlalala');
     const exists = await this.checkIfExists(notification.resource);
     try {
       const headers: AxiosRequestConfig = {
@@ -38,6 +39,7 @@ export class OrdersService {
         headers,
         notification.resource,
       );
+      console.log('hla');
 
       if (order?.shipping?.id) {
         await this.shipmentsService.findByCoreDataIdAndAddOrder(
