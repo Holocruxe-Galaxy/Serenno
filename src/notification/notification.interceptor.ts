@@ -34,7 +34,8 @@ export class NotificationInterceptor implements NestInterceptor {
           await this.notificationService.create(notification);
 
           const isShipment = notification.resource.split('/')[1];
-          if (isShipment !== ('shipments' || 'orders_v2')) return;
+
+          if (isShipment !== 'shipments' && isShipment !== 'orders') return;
 
           const headers = await this.adminService.findToken(
             notification.user_id,
@@ -42,7 +43,7 @@ export class NotificationInterceptor implements NestInterceptor {
 
           if (isShipment === 'shipments')
             await this.shipmentsGateway.eventEmitter(notification, headers);
-          if (isShipment === 'orders_v2')
+          if (isShipment === 'orders')
             await this.ordersService.create(notification, headers);
         },
       }),
