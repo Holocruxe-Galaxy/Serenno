@@ -158,7 +158,7 @@ export class ShipmentsService {
 
   async findAll() {
     return await this.shippingModel
-      .find()
+      .find({ 'coreData.deliveryType': { $in: ['same_day', 'next_day'] } })
       .select('coreData')
       .sort({ createdAt: -1 });
   }
