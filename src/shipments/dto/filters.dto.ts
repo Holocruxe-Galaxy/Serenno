@@ -9,6 +9,10 @@ export class FiltersDto {
 
   @IsString()
   @IsOptional()
+  q?: string;
+
+  @IsString()
+  @IsOptional()
   deliveryType?: string;
 
   @IsString()

@@ -13,7 +13,12 @@ import { AdminService } from 'src/admin/admin.service';
 import { OrdersService } from 'src/orders/orders.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { Filters } from './schemas/filters.schema';
-import { FiltersDto } from './dto/filters.dto';
+import { FilterQuery } from 'mongoose';
+
+interface Pagination {
+  limit: number;
+  skip: number;
+}
 
 interface Filter {
   deliveryType?: string;
@@ -30,6 +35,29 @@ type FormattedFilter = {
   [`core.deliveryTime`]?: string;
   [`core.status`]?: string;
 };
+
+interface Query {
+  $regex: string | number;
+  $options: string;
+}
+
+interface Search {
+  ['coreData.id']?: Query;
+  ['coreData.address']?: Query;
+  ['coreData.deliveryPreferences']?: Query;
+  ['coreData.order']?: Query;
+  ['coreData.zipCode']?: Query;
+  ['coreData.seller']?: Query;
+  ['coreData.sellerAddress']?: Query;
+}
+
+interface Or {
+  $or: Search[];
+}
+
+interface And {
+  $and: Or[];
+}
 
 @Injectable()
 export class ShipmentsService {
@@ -166,6 +194,19 @@ export class ShipmentsService {
     }
   }
 
+  private diacriticSensitiveRegex = (str: string): string => {
+    return str
+      .replace(/a|á|à/gi, '[a,á,à,A,Á,À]')
+      .replace(/b|v/gi, '[b,B,v,V]')
+      .replace(/c|k|s|z/gi, '[c,C,k,K,s,S,z,Z]')
+      .replace(/e|é|è/gi, '[e,é,è,E,É,È]')
+      .replace(/g|h|j/gi, '[g,G,h,H,j,J]')
+      .replace(/i|í|ì/gi, '[i,í,ì,I,Í,Ì]')
+      .replace(/n|ñ/gi, '[n,N,ñ,Ñ]')
+      .replace(/o|ó|ò/gi, '[o,ó,ò,O,Ó,Ò]')
+      .replace(/u|ú|ü|ù/gi, '[u,ú,ü,ù,U,Ú,Ü,Ù]');
+  };
+
   async findByCoreDataIdAndAddOrder(id: number, order: number) {
     const shipment = await this.shippingModel.findOne({ 'coreData.id': id });
 
@@ -191,9 +232,33 @@ export class ShipmentsService {
     return formattedFilters;
   }
 
-  async filterData({ limit, skip, ...filters }: FiltersDto) {
+  formatSearch(str: string): And {
+    const search = this.diacriticSensitiveRegex(str).trim().replace(' ', '|');
+    const query: Query = { $regex: search, $options: 'i' };
+
+    return {
+      $and: [
+        {
+          $or: [
+            { ['coreData.id']: query },
+            { ['coreData.address']: query },
+            { ['coreData.deliveryPreferences']: query },
+            { ['coreData.order']: query },
+            { ['coreData.zipCode']: query },
+            { ['coreData.seller']: query },
+            { ['coreData.sellerAddress']: query },
+          ],
+        },
+      ],
+    };
+  }
+
+  async filterData(
+    { limit, skip, ...filters }: FormattedFilter & Pagination,
+    search?: And,
+  ) {
     return await this.shippingModel
-      .find(filters)
+      .find({ ...filters, ...search })
       .limit(limit)
       .skip(skip)
       .select('coreData')

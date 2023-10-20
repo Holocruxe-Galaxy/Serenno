@@ -39,15 +39,19 @@ export class ShipmentsController {
   }
 
   @Post()
-  async findAll(@Body() { limit, skip, ...filter }: FiltersDto) {
+  async findAll(@Body() { limit, skip, q, ...filter }: FiltersDto) {
     const formattedFilters = this.shipmentsService.formatFilters(filter);
     const filters = await this.shipmentsService.findFilters();
+    const search = q ? this.shipmentsService.formatSearch(q) : undefined;
     const count = await this.shipmentsService.count(formattedFilters);
-    const shipments = await this.shipmentsService.filterData({
-      limit,
-      skip,
-      ...formattedFilters,
-    });
+    const shipments = await this.shipmentsService.filterData(
+      {
+        limit,
+        skip,
+        ...formattedFilters,
+      },
+      search,
+    );
 
     return { shipments, filters, count };
   }
