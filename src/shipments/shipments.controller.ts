@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
 import { ShipmentsService } from './shipments.service';
-import { LostNotificationDto } from 'src/notification/dto/notification.dto';
+// import { LostNotificationDto } from 'src/notification/dto/notification.dto';
+import { FiltersDto } from './dto/filters.dto';
 
 @Controller('shipments')
 export class ShipmentsController {
@@ -27,8 +28,27 @@ export class ShipmentsController {
   //   return this.shipmentsService.populate(token as any);
   // }
 
-  @Get()
-  findAll() {
-    return this.shipmentsService.findAll();
+  @Get('addfilters')
+  addFilters() {
+    return this.shipmentsService.populateFilters();
+  }
+
+  @Get('filters')
+  filters() {
+    return this.shipmentsService.findFilters();
+  }
+
+  @Post()
+  async findAll(@Body() { limit, skip, ...filter }: FiltersDto) {
+    const formattedFilters = this.shipmentsService.formatFilters(filter);
+    const filters = await this.shipmentsService.findFilters();
+    const count = await this.shipmentsService.count(formattedFilters);
+    const shipments = await this.shipmentsService.filterData({
+      limit,
+      skip,
+      ...formattedFilters,
+    });
+
+    return { shipments, filters, count };
   }
 }
