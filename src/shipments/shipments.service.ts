@@ -12,6 +12,24 @@ import { CoreData, Seller, Shipping } from './interfaces';
 import { AdminService } from 'src/admin/admin.service';
 import { OrdersService } from 'src/orders/orders.service';
 import { NotificationService } from 'src/notification/notification.service';
+import { Filters } from './schemas/filters.schema';
+import { FiltersDto } from './dto/filters.dto';
+
+interface Filter {
+  deliveryType?: string;
+  sellerAddress?: string;
+  seller?: string;
+  deliveryTime?: string;
+  status?: string;
+}
+
+type FormattedFilter = {
+  [`core.deliveryType`]?: string;
+  [`core.sellerAddress`]?: string;
+  [`core.seller`]?: string;
+  [`core.deliveryTime`]?: string;
+  [`core.status`]?: string;
+};
 
 @Injectable()
 export class ShipmentsService {
@@ -19,6 +37,7 @@ export class ShipmentsService {
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
     @InjectModel(Shipment.name) private readonly shippingModel: Model<Shipment>,
+    @InjectModel(Filters.name) private readonly filterModel: Model<Filters>,
     @Inject(AdminService)
     private readonly adminService: AdminService,
     @Inject(forwardRef(() => NotificationService))
@@ -68,6 +87,7 @@ export class ShipmentsService {
         status: shipment.status,
         order: order?.order?.id || 'Sin código disponible',
       };
+      await this.addFilters(coreData);
 
       if (exists) {
         await this.shippingModel.findByIdAndUpdate(exists.id, {
@@ -137,16 +157,13 @@ export class ShipmentsService {
     const delivery: string[] = [];
 
     for (const shipment of shipments) {
-      console.log(shipment);
       if (shipment?.shipment?.lead_time) {
-        console.log('hi');
         if (
           !delivery.includes(shipment.shipment.lead_time.shipping_method.type)
         )
           delivery.push(shipment.shipment.lead_time.shipping_method.type);
       }
     }
-    console.log(delivery);
   }
 
   async findByCoreDataIdAndAddOrder(id: number, order: number) {
@@ -156,11 +173,82 @@ export class ShipmentsService {
       await shipment.updateOne({ $set: { 'coreData.order': order } });
   }
 
+  formatFilters(filters: Filter): FormattedFilter {
+    const formattedFilters = {};
+
+    for (const category in filters) {
+      formattedFilters[`coreData.${category}`] = {
+        $in: [filters[category]],
+      };
+    }
+
+    if (!formattedFilters['coreData.deliveryType']) {
+      formattedFilters['coreData.deliveryType'] = {
+        $in: ['same_day', 'next_day'],
+      };
+    }
+
+    return formattedFilters;
+  }
+
+  async filterData({ limit, skip, ...filters }: FiltersDto) {
+    return await this.shippingModel
+      .find(filters)
+      .limit(limit)
+      .skip(skip)
+      .select('coreData')
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  async count({ ...filters }: FormattedFilter) {
+    return await this.shippingModel.count(filters).exec();
+  }
+
   async findAll() {
     return await this.shippingModel
       .find({ 'coreData.deliveryType': { $in: ['same_day', 'next_day'] } })
       .select('coreData')
       .sort({ createdAt: -1 });
+  }
+
+  async findFilters() {
+    return await this.filterModel.findOne().select('-_id -__v').exec();
+  }
+
+  private async addFilters(coreData: CoreData) {
+    const f = await this.filterModel.findOne();
+
+    if (!f.deliveryType.includes(coreData.deliveryType))
+      f.deliveryType.push(coreData.deliveryType);
+    if (!f.sellerAddress.includes(coreData.sellerAddress))
+      f.sellerAddress.push(coreData.sellerAddress);
+    if (!f.seller.includes(coreData.seller)) f.seller.push(coreData.seller);
+    if (!f.deliveryTime.includes(coreData.deliveryTime))
+      f.deliveryTime.push(coreData.deliveryTime);
+    if (!f.status.includes(coreData.status)) f.status.push(coreData.status);
+
+    await f.updateOne(f);
+  }
+
+  async populateFilters() {
+    const data = await this.findAll();
+    const f = await this.filterModel.findOne();
+
+    data.forEach(({ coreData }) => {
+      if (!f.deliveryType.includes(coreData.deliveryType))
+        f.deliveryType.push(coreData.deliveryType);
+      if (!f.deliveryPreferences.includes(coreData.deliveryPreferences))
+        f.deliveryPreferences.push(coreData.deliveryPreferences);
+      if (!f.sellerAddress.includes(coreData.sellerAddress))
+        f.sellerAddress.push(coreData.sellerAddress);
+      if (!f.seller.includes(coreData.seller)) f.seller.push(coreData.seller);
+      if (!f.deliveryTime.includes(coreData.deliveryTime))
+        f.deliveryTime.push(coreData.deliveryTime);
+      if (!f.status.includes(coreData.status)) f.status.push(coreData.status);
+    });
+
+    await f.updateOne(f);
   }
 
   async populate(token?: Token) {
