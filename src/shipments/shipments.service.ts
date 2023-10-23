@@ -13,7 +13,11 @@ import { AdminService } from 'src/admin/admin.service';
 import { OrdersService } from 'src/orders/orders.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { Filters } from './schemas/filters.schema';
-import { FiltersDto } from './dto/filters.dto';
+
+interface Pagination {
+  limit: number;
+  skip: number;
+}
 
 interface Filter {
   deliveryType?: string;
@@ -30,6 +34,29 @@ type FormattedFilter = {
   [`core.deliveryTime`]?: string;
   [`core.status`]?: string;
 };
+
+interface Query {
+  $regex: string | number;
+  $options: string;
+}
+
+interface Search {
+  ['coreData.id']?: Query;
+  ['coreData.address']?: Query;
+  ['coreData.deliveryPreferences']?: Query;
+  ['coreData.order']?: Query;
+  ['coreData.zipCode']?: Query;
+  ['coreData.seller']?: Query;
+  ['coreData.sellerAddress']?: Query;
+}
+
+interface Or {
+  $or: Search[];
+}
+
+interface And {
+  $and: Or[];
+}
 
 @Injectable()
 export class ShipmentsService {
@@ -71,7 +98,7 @@ export class ShipmentsService {
       const deliveryTime = new Intl.DateTimeFormat('en-GB').format(date);
 
       const coreData: CoreData = {
-        id: shipment.id,
+        id: shipment.id.toString(),
         seller: seller.nickname,
         sellerAddress: seller.address.address,
         buyer: shipment.destination.receiver_name,
@@ -85,7 +112,7 @@ export class ShipmentsService {
         destinationLongitude: destinationData.longitude,
         deliveryType: shipment.lead_time.shipping_method.type,
         status: shipment.status,
-        order: order?.order?.id || 'Sin código disponible',
+        order: order?.order?.id.toString() || 'Sin código disponible',
       };
       await this.addFilters(coreData);
 
@@ -132,7 +159,7 @@ export class ShipmentsService {
   }
 
   private async checkIfExists(resource: string) {
-    const id = Number(resource.split('/')[2]);
+    const id = resource.split('/')[2];
 
     return await this.shippingModel.findOne({ 'coreData.id': id });
   }
@@ -146,7 +173,7 @@ export class ShipmentsService {
       await shipment.updateOne({
         coreData: {
           ...shipment.coreData,
-          order: order?.order?.id || 'Sin código disponible',
+          order: order?.order?.id.toString() || 'Sin código disponible',
         },
       });
     }
@@ -166,11 +193,28 @@ export class ShipmentsService {
     }
   }
 
+  private diacriticSensitiveRegex = (str: string): string => {
+    return str
+      .replace(/a|á|à/gi, '[a,á,à,A,Á,À]')
+      .replace(/b|v/gi, '[b,B,v,V]')
+      .replace(/c|k|s|z/gi, '[c,C,k,K,s,S,z,Z]')
+      .replace(/e|é|è/gi, '[e,é,è,E,É,È]')
+      .replace(/g|h|j/gi, '[g,G,h,H,j,J]')
+      .replace(/i|í|ì/gi, '[i,í,ì,I,Í,Ì]')
+      .replace(/n|ñ/gi, '[n,N,ñ,Ñ]')
+      .replace(/o|ó|ò/gi, '[o,ó,ò,O,Ó,Ò]')
+      .replace(/u|ú|ü|ù/gi, '[u,ú,ü,ù,U,Ú,Ü,Ù]');
+  };
+
   async findByCoreDataIdAndAddOrder(id: number, order: number) {
-    const shipment = await this.shippingModel.findOne({ 'coreData.id': id });
+    const shipment = await this.shippingModel.findOne({
+      'coreData.id': id.toString(),
+    });
 
     if (shipment)
-      await shipment.updateOne({ $set: { 'coreData.order': order } });
+      await shipment.updateOne({
+        $set: { 'coreData.order': order.toString() },
+      });
   }
 
   formatFilters(filters: Filter): FormattedFilter {
@@ -191,9 +235,33 @@ export class ShipmentsService {
     return formattedFilters;
   }
 
-  async filterData({ limit, skip, ...filters }: FiltersDto) {
+  formatSearch(str: string): And {
+    const search = this.diacriticSensitiveRegex(str).trim().replace(' ', '|');
+    const query: Query = { $regex: search, $options: 'i' };
+
+    return {
+      $and: [
+        {
+          $or: [
+            { ['coreData.id']: query },
+            { ['coreData.address']: query },
+            { ['coreData.deliveryPreferences']: query },
+            { ['coreData.order']: query },
+            { ['coreData.zipCode']: query },
+            { ['coreData.seller']: query },
+            { ['coreData.sellerAddress']: query },
+          ],
+        },
+      ],
+    };
+  }
+
+  async filterData(
+    { limit, skip, ...filters }: FormattedFilter & Pagination,
+    search?: And,
+  ) {
     return await this.shippingModel
-      .find(filters)
+      .find({ ...filters, ...search })
       .limit(limit)
       .skip(skip)
       .select('coreData')
@@ -201,8 +269,8 @@ export class ShipmentsService {
       .exec();
   }
 
-  async count({ ...filters }: FormattedFilter) {
-    return await this.shippingModel.count(filters).exec();
+  async count({ ...filters }: FormattedFilter, search?: And) {
+    return await this.shippingModel.count({ ...filters, ...search }).exec();
   }
 
   async findAll() {
@@ -229,6 +297,20 @@ export class ShipmentsService {
     if (!f.status.includes(coreData.status)) f.status.push(coreData.status);
 
     await f.updateOne(f);
+  }
+
+  async idToString() {
+    const shipments = await this.findAll();
+
+    for (const shipment of shipments) {
+      await shipment.updateOne({
+        coreData: {
+          ...shipment.coreData,
+          id: shipment.coreData.id.toString(),
+          order: shipment.coreData.order.toString(),
+        },
+      });
+    }
   }
 
   async populateFilters() {
