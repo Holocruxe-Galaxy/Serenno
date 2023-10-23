@@ -28,22 +28,27 @@ export class ShipmentsController {
   //   return this.shipmentsService.populate(token as any);
   // }
 
-  @Get('addfilters')
-  addFilters() {
-    return this.shipmentsService.populateFilters();
-  }
+  // @Get('ids')
+  // idToString() {
+  //   return this.shipmentsService.idToString();
+  // }
 
-  @Get('filters')
-  filters() {
-    return this.shipmentsService.findFilters();
-  }
+  // @Get('addfilters')
+  // addFilters() {
+  //   return this.shipmentsService.populateFilters();
+  // }
+
+  // @Get('filters')
+  // filters() {
+  //   return this.shipmentsService.findFilters();
+  // }
 
   @Post()
   async findAll(@Body() { limit, skip, q, ...filter }: FiltersDto) {
     const formattedFilters = this.shipmentsService.formatFilters(filter);
     const filters = await this.shipmentsService.findFilters();
     const search = q ? this.shipmentsService.formatSearch(q) : undefined;
-    const count = await this.shipmentsService.count(formattedFilters);
+    const count = await this.shipmentsService.count(formattedFilters, search);
     const shipments = await this.shipmentsService.filterData(
       {
         limit,

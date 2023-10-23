@@ -1,5 +1,5 @@
 export interface CoreData {
-  id: number;
+  id: number | string;
   buyer: string;
   address: string;
   zipCode: string;

@@ -13,7 +13,6 @@ import { AdminService } from 'src/admin/admin.service';
 import { OrdersService } from 'src/orders/orders.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { Filters } from './schemas/filters.schema';
-import { FilterQuery } from 'mongoose';
 
 interface Pagination {
   limit: number;
@@ -99,7 +98,7 @@ export class ShipmentsService {
       const deliveryTime = new Intl.DateTimeFormat('en-GB').format(date);
 
       const coreData: CoreData = {
-        id: shipment.id,
+        id: shipment.id.toString(),
         seller: seller.nickname,
         sellerAddress: seller.address.address,
         buyer: shipment.destination.receiver_name,
@@ -113,7 +112,7 @@ export class ShipmentsService {
         destinationLongitude: destinationData.longitude,
         deliveryType: shipment.lead_time.shipping_method.type,
         status: shipment.status,
-        order: order?.order?.id || 'Sin código disponible',
+        order: order?.order?.id.toString() || 'Sin código disponible',
       };
       await this.addFilters(coreData);
 
@@ -160,7 +159,7 @@ export class ShipmentsService {
   }
 
   private async checkIfExists(resource: string) {
-    const id = Number(resource.split('/')[2]);
+    const id = resource.split('/')[2];
 
     return await this.shippingModel.findOne({ 'coreData.id': id });
   }
@@ -174,7 +173,7 @@ export class ShipmentsService {
       await shipment.updateOne({
         coreData: {
           ...shipment.coreData,
-          order: order?.order?.id || 'Sin código disponible',
+          order: order?.order?.id.toString() || 'Sin código disponible',
         },
       });
     }
@@ -208,10 +207,14 @@ export class ShipmentsService {
   };
 
   async findByCoreDataIdAndAddOrder(id: number, order: number) {
-    const shipment = await this.shippingModel.findOne({ 'coreData.id': id });
+    const shipment = await this.shippingModel.findOne({
+      'coreData.id': id.toString(),
+    });
 
     if (shipment)
-      await shipment.updateOne({ $set: { 'coreData.order': order } });
+      await shipment.updateOne({
+        $set: { 'coreData.order': order.toString() },
+      });
   }
 
   formatFilters(filters: Filter): FormattedFilter {
@@ -266,8 +269,8 @@ export class ShipmentsService {
       .exec();
   }
 
-  async count({ ...filters }: FormattedFilter) {
-    return await this.shippingModel.count(filters).exec();
+  async count({ ...filters }: FormattedFilter, search?: And) {
+    return await this.shippingModel.count({ ...filters, ...search }).exec();
   }
 
   async findAll() {
@@ -294,6 +297,20 @@ export class ShipmentsService {
     if (!f.status.includes(coreData.status)) f.status.push(coreData.status);
 
     await f.updateOne(f);
+  }
+
+  async idToString() {
+    const shipments = await this.findAll();
+
+    for (const shipment of shipments) {
+      await shipment.updateOne({
+        coreData: {
+          ...shipment.coreData,
+          id: shipment.coreData.id.toString(),
+          order: shipment.coreData.order.toString(),
+        },
+      });
+    }
   }
 
   async populateFilters() {
